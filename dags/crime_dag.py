@@ -3,6 +3,7 @@ from airflow.utils.dates import days_ago
 from datetime import timedelta
 from airflow.operators.bash import BashOperator
 from airflow.operators.dummy import DummyOperator
+import gdown
 
 default_args = {
     "owner": "ferry",
@@ -10,7 +11,7 @@ default_args = {
 }
 
 def extract_file():
-    url = ""
-    output = 'opt/airflow/dataset/la_crime.csv'
+    url = "https://data.lacity.org/api/views/2nrs-mtv8/rows.csv?accessType=DOWNLOAD"
+    output = 'opt/airflow/datasets/la_crime.csv'
     gdown.download(url, output, quiet=False)
 
