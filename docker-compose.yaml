@@ -281,7 +281,7 @@ services:
     environment:
       - MB_DB_TYPE=postgres
       - MB_DB_DBNAME=metabaseapp
-      - MB_DB_HOST=host.docker.internal
+      - MB_DB_HOST=${POSTGRES_HOST}
       - MB_DB_USER=${POSTGRES_USER}
       - MB_DB_PASS=${POSTGRES_PASSWORD}
       - MB_DB_PORT=${POSTGRES_PORT}
