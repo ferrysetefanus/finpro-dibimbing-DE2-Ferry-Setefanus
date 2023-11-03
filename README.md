@@ -9,7 +9,7 @@ Tema dari final project saya adalah melakukan analisis terhadap data kejahatan y
 Extract file dari api -> transform menggunakan spark -> load ke hydra -> visualisasi data menggunakan metabase
 
 ## Result
-![arsitektur](https://github.com/ferrysetefanus/finpro-dibimbing-DE2-Ferry-Setefanus/blob/main/img/architecture.png)
+![arsitektur](https://github.com/ferrysetefanus/finpro-dibimbing-DE2-Ferry-Setefanus/blob/main/img/metabase-result.png)
 
 1. 2022 Merupakan tahun dengan tingkat kejahatan tertinggi
 2. Central Los Angeles menjadi wilayah yang paling banyak terjadi kasus kriminal.
