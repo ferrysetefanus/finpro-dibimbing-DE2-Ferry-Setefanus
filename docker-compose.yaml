@@ -31,10 +31,11 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
-    - ${AIRFLOW_PROJ_DIR:-.}/spark:/opt/airflow/spark-scripts
-    - ${AIRFLOW_PROJ_DIR:-.}/datasets:/opt/airflow/datasets
+    - ${AIRFLOW_PROJ_DIR:-.}/spark-scripts:/spark-scripts
+    - ${AIRFLOW_PROJ_DIR:-.}/datasets:/datasets
     - ${AIRFLOW_PROJ_DIR:-.}/metabase-data:/opt/airflow/metabase-data
-    - ${AIRFLOW_PROJ_DIR:-.}/jars:/opt/airflow/jars
+    - ${AIRFLOW_PROJ_DIR:-.}/jars:/jars
+    - ${AIRFLOW_PROJ_DIR:-.}/.env:/.env
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -257,27 +258,47 @@ services:
 
   spark-master:
     container_name: spark-master
-    image: bitnami/spark:latest
+    image: bitnami/spark:3.3.2
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    volumes:
+      - ${AIRFLOW_PROJ_DIR:-.}/spark-scripts:/spark-scripts
+      - ${AIRFLOW_PROJ_DIR:-.}/jars:/jars
+      - ${AIRFLOW_PROJ_DIR:-.}/datasets:/datasets
+      - ${AIRFLOW_PROJ_DIR:-.}/.env:/.env
     ports:
       - ${SPARK_UI_PORT}:8080
-    environment:
-      SPARK_MODE: master
-    restart: always
+      - ${SPARK_MASTER_PORT}:7077
 
   spark-worker:
+    &worker_default
     container_name: spark-worker
-    image: bitnami/spark:latest
+    image: bitnami/spark:3.3.2
     environment:
-      SPARK_MODE: worker
-      SPARK_MASTER_URL: spark://spark-master:7077
-    restart: always
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://${SPARK_MASTER_HOST_NAME}:${SPARK_MASTER_PORT}
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=1
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
     volumes:
-      - ./spark:/spark-scripts
+      - ${AIRFLOW_PROJ_DIR:-.}/spark-scripts:/spark-scripts
+      - ${AIRFLOW_PROJ_DIR:-.}/jars:/jars
+      - ${AIRFLOW_PROJ_DIR:-.}/datasets:/datasets
+      - ${AIRFLOW_PROJ_DIR:-.}/.env:/.env
+    depends_on:
+      - spark-master
 
   metabase:
     image: metabase/metabase:v0.47.3
     ports:
-      - ${METABASE_PORT}:3000  # Port Metabase, sesuaikan dengan kebutuhan Anda
+      - ${METABASE_PORT}:3000 
     environment:
       - MB_DB_TYPE=postgres
       - MB_DB_DBNAME=metabaseapp

@@ -12,9 +12,10 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
+# mengekstrak file melalui api menggunakan metode chunk agar proses ekstraksi tidak terlalu berat
 def extract_file():
     url = "https://data.lacity.org/api/views/2nrs-mtv8/rows.csv?accessType=DOWNLOAD"
-    output = '/opt/airflow/datasets/la_crime.csv'
+    output = '/datasets/la_crime.csv'
     
     with requests.get(url, stream=True) as response:
         with open(output, 'wb') as f:
@@ -28,7 +29,8 @@ with DAG(
     default_args=default_args,
     dagrun_timeout=timedelta(minutes=60),
     description="dag for crime analysis",
-    start_date=days_ago(1)
+    start_date=days_ago(1),
+    schedule_interval="0 1 * * *"
 ) as dag:
     
     start = DummyOperator(task_id="start")
@@ -38,10 +40,16 @@ with DAG(
         python_callable=extract_file
     )
 
-    transform = SparkSubmitOperator(
-        
+    # mendefinisikan sparksubmit task
+    transform_load = SparkSubmitOperator(
+        application="/spark-scripts/spark_transform.py",
+        conn_id="spark_default",
+        task_id="spark_transform_load",
+        dag=dag,
+        driver_class_path="/jars/postgresql-42.2.18.jar",
+        jars="/jars/postgresql-42.2.18.jar"
     )
 
     end = DummyOperator(task_id="end")
 
-    start >> extract_file >> end
+    start >> extract_file >> transform_load >> end

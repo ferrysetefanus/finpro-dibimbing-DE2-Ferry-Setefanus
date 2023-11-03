@@ -3,3 +3,5 @@ pandas
 requests
 lxml
 python-dotenv==0.20.0
+apache-airflow-providers-apache-spark
+pyspark==3.3.2
